@@ -22,7 +22,7 @@ CORS_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:8080",
-    # Add your deployed frontend URL here once known
+    "https://sketchforge.vercel.app",
 ]
 
 print(f"✓ Model path: {MODEL_PATH}")
