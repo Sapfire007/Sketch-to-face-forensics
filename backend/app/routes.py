@@ -14,7 +14,7 @@ async def root():
 async def health():
     return {
         "status": "healthy",
-        "model_loaded": ml_model.model is not None
+        "model_loaded": ml_model.interpreter is not None
     }
 
 @router.post("/generate")
