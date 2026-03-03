@@ -1,0 +1,5 @@
+model/
+venv/
+__pycache__/
+*.pyc
+convert_to_tflite.py

@@ -1,3 +1,5 @@
+import os
+import urllib.request
 import numpy as np
 from PIL import Image
 
@@ -8,11 +10,23 @@ except ImportError:
         import tflite_runtime.interpreter as _tflite
         TFLiteInterpreter = _tflite.Interpreter
     except ImportError:
-        # Local Windows dev — use TensorFlow's bundled interpreter
         import tensorflow.lite as _tflite
         TFLiteInterpreter = _tflite.Interpreter
 
-from app.config import MODEL_PATH
+from app.config import MODEL_PATH, MODEL_URL
+
+
+def _ensure_model():
+    """Download model to /tmp if running on serverless and not yet cached."""
+    if not os.path.exists(MODEL_PATH):
+        if not MODEL_URL:
+            raise RuntimeError(
+                "Model file not found and MODEL_URL env var is not set."
+            )
+        print(f"Downloading model from {MODEL_URL} ...")
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+        print(f"Model downloaded to {MODEL_PATH} ({os.path.getsize(MODEL_PATH) / 1e6:.1f} MB)")
+
 
 class SketchToPhotoModel:
     def __init__(self):
@@ -21,7 +35,8 @@ class SketchToPhotoModel:
         self.output_details = None
 
     def load(self):
-        """Load the TFLite model"""
+        """Ensure model is present then load the TFLite interpreter."""
+        _ensure_model()
         print(f"Loading TFLite model from {MODEL_PATH}...")
         self.interpreter = TFLiteInterpreter(model_path=MODEL_PATH)
         self.interpreter.allocate_tensors()
@@ -31,20 +46,17 @@ class SketchToPhotoModel:
 
     def predict(self, image: Image.Image) -> np.ndarray:
         """Generate photo from sketch"""
-        # Preprocess
         image = image.convert("RGB").resize((256, 256))
         image_array = np.array(image).astype('float32') / 255.0
         image_array = np.expand_dims(image_array, axis=0)
 
-        # Run inference
         self.interpreter.set_tensor(self.input_details[0]['index'], image_array)
         self.interpreter.invoke()
         prediction = self.interpreter.get_tensor(self.output_details[0]['index'])
 
-        # Postprocess
         output = (prediction[0] * 255).astype(np.uint8)
         output = np.clip(output, 0, 255)
         return output
 
-# Global model instance
+
 ml_model = SketchToPhotoModel()
