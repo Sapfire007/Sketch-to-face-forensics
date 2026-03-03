@@ -22,8 +22,7 @@ CORS_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:8080",
-    "https://*.onrender.com",
-    "https://*.vercel.app",
+    # Add your deployed frontend URL here once known
 ]
 
 print(f"✓ Model path: {MODEL_PATH}")
