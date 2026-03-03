@@ -2,10 +2,15 @@ import numpy as np
 from PIL import Image
 
 try:
-    import tflite_runtime.interpreter as tflite
+    from ai_edge_litert.interpreter import Interpreter as TFLiteInterpreter
 except ImportError:
-    # tflite_runtime not available on Windows — use TensorFlow's bundled interpreter
-    import tensorflow.lite as tflite
+    try:
+        import tflite_runtime.interpreter as _tflite
+        TFLiteInterpreter = _tflite.Interpreter
+    except ImportError:
+        # Local Windows dev — use TensorFlow's bundled interpreter
+        import tensorflow.lite as _tflite
+        TFLiteInterpreter = _tflite.Interpreter
 
 from app.config import MODEL_PATH
 
@@ -18,7 +23,7 @@ class SketchToPhotoModel:
     def load(self):
         """Load the TFLite model"""
         print(f"Loading TFLite model from {MODEL_PATH}...")
-        self.interpreter = tflite.Interpreter(model_path=MODEL_PATH)
+        self.interpreter = TFLiteInterpreter(model_path=MODEL_PATH)
         self.interpreter.allocate_tensors()
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
